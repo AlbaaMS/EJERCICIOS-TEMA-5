@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, defaultdict
 
 
 def sustituye_palabras(texto: str, diccionario: dict[str, str]) -> str:
@@ -43,7 +43,6 @@ def indexa_por_iniciales(texto: str) -> dict[str, set[str]]:
         else:
             res[clave] = {palabra}
     return res
-# intentar hacer sin el if??
 
 
 def construye_frecuencias_bigramas(texto: str) -> dict[str, float]:
@@ -60,9 +59,47 @@ def construye_frecuencias_bigramas(texto: str) -> dict[str, float]:
     Devuelve:
         Diccionario que asocia a cada bigrama su frecuencia normalizada en el texto.
     """
-    # TODO: Implementar la función
-    pass
+    '''
+    conteo = {}
+    texto = texto.lower()
+    for i in range(len(texto) - 1): #para que el índice no se salga del rango del texto
+        bigrama = texto[i] + texto[i + 1] #para concatenar el texto en bigramas
+        if bigrama.isalpha():
+            if bigrama in conteo:
+                conteo[bigrama] += 1
+            else:
+                conteo[bigrama] = 1
+        if not conteo:
+            return {} # esto para cuando no haya ningun bigrama válido
+        
+    total_bigramas = sum(conteo.values())
 
+    frecuencia = {}
+    for clave, valor in conteo.items():
+        frecuencia[clave] = valor/ total_bigramas
+
+    return frecuencia
+'''
+#opción profesor, más eficiente
+    bigramas = []
+    texto = texto.lower()
+    for c1, c2 in zip(texto, texto[1:]):
+        if c1.isalpha() and c2.isalpha():
+            bigramas.append(c1 + c2)
+    contador = Counter(bigramas) #hacer este counter sin crear la lista bigramas. TO DO!
+    total_bigramas = len(bigramas)
+    res = {}
+    for bigrama, conteo in contador.items():
+        res[bigrama] = conteo / total_bigramas
+    return res
+
+    ''' USANDO DEFAULTDICT
+    contador = defaultdict(int)
+    for c1, c2 in zip (texto, texto[1:]):
+        if c1.isalpha() and c2.isalpha():
+            bigramas.append(c1 + c2)
+    el resto igual
+    '''
 
 def calcula_distancia_media_frecuencias(freq1: dict[str, float], freq2: dict[str, float]) -> float:
     """
@@ -76,8 +113,28 @@ def calcula_distancia_media_frecuencias(freq1: dict[str, float], freq2: dict[str
     Devuelve:
         Distancia media entre los dos vectores de frecuencias, o 0.0 si ambos diccionarios están vacíos.
     """
-    # TODO: Implementar la función
-    pass
+    freq = set(freq1) | set(freq2) #uno ambos en un solo diccionario, sin perder las claves únicas
+
+    if not len(freq): #para comprobar que el conjunto no esté vacío y evitar errores como ZeroDivision
+        return 0.0
+    
+    res = 0.0
+
+    for clave in freq: #get se usa para que me busque un elemento en un diccionario. Si no lo encuentra NO dará error
+        valor1 = freq1.get(clave, 0.0) #para obtener el valor de cada clave
+        valor2 = freq2.get(clave, 0.0) #para obtener el valor de cada clave
+        res += abs(valor1 - valor2) 
+    return res / len(freq)
+
+''' VERSIÓN FERMÍN EN CLASE
+    if len(freq1) == 0 and len(freq2) == 0:
+        return 0.0
+    todos_bigramas = set(freq1).unionset(freq2)
+    suma_diferencias = 0
+    for bigrama in todos_bigramas:
+        suma_diferencias += abs(freq1.get(bigrama, 0)-freq2.get(bigrama, 0))
+    return suma_diferencias / len(todos_bigramas)
+'''
 
 def identifica_idioma(textos_ejemplo: dict[str, str], texto_a_identificar: str) -> str:
     """
@@ -91,9 +148,18 @@ def identifica_idioma(textos_ejemplo: dict[str, str], texto_a_identificar: str) 
     Devuelve:
         El idioma identificado del texto.
     """
-    # TODO: Implementar la función
-    pass
+    #PASOS SEGUIDOS
+    #1. obtener el diccionario de frecuencias para _texto
+    freq_nuevo_texto = construye_frecuencias_bigramas(texto_a_identificar)
 
+    lista_contador = []
+
+    for idioma, texto in textos_ejemplo.items():
+        freq_ejemplo = construye_frecuencias_bigramas(texto)
+        contador= calcula_distancia_media_frecuencias(freq_nuevo_texto, freq_ejemplo)
+        lista_contador.append((contador, idioma))
+    
+    return min(lista_contador)[1]
 
 
 

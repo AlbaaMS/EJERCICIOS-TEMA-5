@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import namedtuple, Counter, defaultdict
 import csv
 
 Penguin = namedtuple("Penguin", [
@@ -23,15 +23,16 @@ def lee_pingüinos(ruta_archivo: str) -> list[Penguin]:
     Devuelve:
     list[Penguin]: Lista de tuplas Penguin con los datos leídos del archivo.
     """    
-    with open(ruta_archivo, 'r') as f:
+    with open(ruta_archivo, encoding = 'utf-8') as f:
         pingüinos = []
         lector = csv.reader(f)
-        next(f)  
+        next(f)  #salta la primera fila del csv
         for species, island, bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g, sex, year in lector:
             pingüino = Penguin(
                 species=species,
                 island=island,
                 bill_length_mm=float(bill_length_mm) if bill_length_mm != "NA" else None,
+                #para que solo haga la condición si se cumple el if, porque sino da error
                 bill_depth_mm=float(bill_depth_mm) if bill_depth_mm != "NA" else None,
                 flipper_length_mm=int(flipper_length_mm) if flipper_length_mm != "NA" else None,
                 body_mass_g=int(body_mass_g) if body_mass_g != "NA" else None,
@@ -51,8 +52,11 @@ def cuenta_pingüinos_por_especie(pingüinos: list[Penguin]) -> dict[str, int]:
     Devuelve:
     dict[str, int]: Diccionario que asocia cada especie de pingüino con su conteo.
     """
-    # TODO: Implementar la función
-    pass
+    especies = []
+    for p in pingüinos:
+        especies.append(p.species)
+    return Counter(especies) # no es el mismo tipo que dict, pero el resultado es correcto
+
 
 def calcula_media_masa_corporal_por_especie(pingüinos: list[Penguin]) -> dict[str, float]:
     """
@@ -64,8 +68,16 @@ def calcula_media_masa_corporal_por_especie(pingüinos: list[Penguin]) -> dict[s
     Devuelve:
     dict[str, float]: Diccionario que asocia cada especie de pingüino con su masa corporal media.
     """
-    # TODO: Implementar la función
-    pass
+    #1 diccionario que agrupe pingüinos por especie (clave-especie y valores, listas pingüinos)
+    pingüinos_especie = defaultdict(list)
+    for p in pingüinos:
+        if p.body_mass_g != None: #filtro
+            pingüinos_especie[p.species].append(p.body_mass_g) 
+    res = {}
+    for especie, pesos in pingüinos_especie.items(): #para iterar los valores
+        #puedo dividir sin preocuparme porque he construido garantizando que todas las listas tienen al menos 1 elemento
+        res[especie] = sum(pesos) / len(pesos)
+    return res
 
 def calcula_minimo_maximo_pico_por_especie(pingüinos: list[Penguin]) -> dict[str, tuple[float, float]]:
     """
@@ -78,9 +90,15 @@ def calcula_minimo_maximo_pico_por_especie(pingüinos: list[Penguin]) -> dict[st
     dict[str, tuple[float, float]]: Diccionario que asocia cada especie de pingüino con una tupla
                                     que contiene la longitud mínima y máxima del pico.
     """
-    # TODO: Implementar la función
-    pass
-
+    pingüinos_especie= defaultdict(list)
+    for p in pingüinos:
+        if p.bill_length_mm != None:
+            pingüinos_especie[p.species].append(p.bill_length_mm)
+    res = {}
+    for especie, picos in pingüinos_especie.items():
+        res[especie] = (min(picos), max(picos)) # esto es una tupla con el minimo y maximo
+    return res
+#se podria hacer todo en un único bucle???
 
 def cuenta_pingüinos_por_especie_filtro(pingüinos: list[Penguin], filtra_isla: str | None = None) -> dict[str, int]:
     """
